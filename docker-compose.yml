@@ -1,0 +1,45 @@
+version: '3.8'
+
+services:
+  web:
+    build: .
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./uploads:/app/uploads
+      - ./static:/app/static
+      - ./migrations:/app/migrations
+    environment:
+      DATABASE_URL: postgresql://user:password@db:5432/microblog
+      FLASK_ENV: development
+    depends_on:
+      db:
+        condition: service_healthy
+    command: >
+      sh -c "
+      flask db init;
+      flask db migrate -m 'Initial migration';
+      flask db upgrade;
+      gunicorn wsgi:app -b 0.0.0.0:5000 -w 4"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  db:
+    image: postgres:13
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: microblog
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U user -d microblog"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres_data:

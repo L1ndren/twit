@@ -1,0 +1,892 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "Microblog API",
+    "version": "1.0.0",
+    "description": "API для корпоративного сервиса микроблогов"
+  },
+  "paths": {
+    "/api/tweets": {
+      "post": {
+        "summary": "Создать новый твит",
+        "description": "Позволяет пользователю создать новый твит с возможностью прикрепления медиафайлов",
+        "parameters": [
+          {
+            "name": "api-key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "API ключ пользователя"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "tweet_data": {
+                    "type": "string",
+                    "description": "Текст твита"
+                  },
+                  "tweet_media_ids": {
+                    "type": "array",
+                    "items": {
+                      "type": "integer"
+                    },
+                    "description": "ID прикрепленных медиафайлов (опционально)"
+                  }
+                },
+                "required": ["tweet_data"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Твит успешно создан",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "result": {
+                      "type": "boolean"
+                    },
+                    "tweet_id": {
+                      "type": "integer",
+                      "description": "ID созданного твита"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Ошибка валидации",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Ошибка аутентификации",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "summary": "Получить ленту твитов",
+        "description": "Возвращает ленту твитов пользователей, на которых подписан текущий пользователь, с поддержкой пагинации",
+        "parameters": [
+          {
+            "name": "api-key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "API ключ пользователя"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 5
+            },
+            "description": "Количество твитов на странице"
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 0
+            },
+            "description": "Смещение (пагинация)"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Успешный запрос",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "result": {
+                      "type": "boolean"
+                    },
+                    "tweets": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/Tweet"
+                      }
+                    },
+                    "total": {
+                      "type": "integer",
+                      "description": "Общее количество твитов"
+                    },
+                    "limit": {
+                      "type": "integer",
+                      "description": "Лимит на странице"
+                    },
+                    "offset": {
+                      "type": "integer",
+                      "description": "Текущее смещение"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Ошибка аутентификации",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/medias": {
+      "post": {
+        "summary": "Загрузить медиафайл",
+        "description": "Позволяет загрузить медиафайл для использования в твитах",
+        "parameters": [
+          {
+            "name": "api-key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "API ключ пользователя"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "file": {
+                    "type": "string",
+                    "format": "binary",
+                    "description": "Медиафайл для загрузки"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Файл успешно загружен",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "result": {
+                      "type": "boolean"
+                    },
+                    "media_id": {
+                      "type": "integer",
+                      "description": "ID загруженного файла"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Ошибка загрузки файла",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Ошибка аутентификации",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/tweets/{tweet_id}": {
+      "delete": {
+        "summary": "Удалить твит",
+        "description": "Позволяет пользователю удалить свой твит",
+        "parameters": [
+          {
+            "name": "api-key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "API ключ пользователя"
+          },
+          {
+            "name": "tweet_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            },
+            "description": "ID твита для удаления"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Твит успешно удален",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "result": {
+                      "type": "boolean"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Ошибка аутентификации",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Нет прав для удаления твита",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Твит не найден",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/tweets/{tweet_id}/likes": {
+      "post": {
+        "summary": "Поставить лайк твиту",
+        "description": "Добавляет отметку 'Нравится' к твиту",
+        "parameters": [
+          {
+            "name": "api-key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "API ключ пользователя"
+          },
+          {
+            "name": "tweet_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            },
+            "description": "ID твита"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Лайк успешно поставлен",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "result": {
+                      "type": "boolean"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Ошибка аутентификации",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Твит не найден",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Убрать лайк с твита",
+        "description": "Убирает отметку 'Нравится' с твита",
+        "parameters": [
+          {
+            "name": "api-key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "API ключ пользователя"
+          },
+          {
+            "name": "tweet_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            },
+            "description": "ID твита"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Лайк успешно убран",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "result": {
+                      "type": "boolean"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Ошибка аутентификации",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/users/{user_id}/follow": {
+      "post": {
+        "summary": "Подписаться на пользователя",
+        "description": "Подписывает текущего пользователя на другого пользователя",
+        "parameters": [
+          {
+            "name": "api-key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "API ключ пользователя"
+          },
+          {
+            "name": "user_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            },
+            "description": "ID пользователя для подписки"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Успешно подписан",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "result": {
+                      "type": "boolean"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Невозможно подписаться на себя",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Ошибка аутентификации",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Пользователь не найден",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Отписаться от пользователя",
+        "description": "Отписывает текущего пользователя от другого пользователя",
+        "parameters": [
+          {
+            "name": "api-key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "API ключ пользователя"
+          },
+          {
+            "name": "user_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            },
+            "description": "ID пользователя для отписки"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Успешно отписан",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "result": {
+                      "type": "boolean"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Ошибка аутентификации",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/users/me": {
+      "get": {
+        "summary": "Получить профиль текущего пользователя",
+        "description": "Возвращает информацию о текущем пользователе",
+        "parameters": [
+          {
+            "name": "api-key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "API ключ пользователя"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Успешный запрос",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserProfile"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Ошибка аутентификации",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/users/{user_id}": {
+      "get": {
+        "summary": "Получить профиль пользователя",
+        "description": "Возвращает информацию о пользователе по ID",
+        "parameters": [
+          {
+            "name": "api-key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "API ключ пользователя"
+          },
+          {
+            "name": "user_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            },
+            "description": "ID пользователя"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Успешный запрос",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserProfile"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Ошибка аутентификации",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Пользователь не найден",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/media/{media_id}": {
+      "get": {
+        "summary": "Получить медиафайл",
+        "description": "Возвращает медиафайл по его ID",
+        "parameters": [
+          {
+            "name": "media_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            },
+            "description": "ID медиафайла"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Успешный запрос",
+            "content": {
+              "image/*": {}
+            }
+          },
+          "404": {
+            "description": "Медиафайл не найден",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/users/me/api-key": {
+      "put": {
+        "summary": "Обновить API-ключ пользователя",
+        "description": "Позволяет пользователю обновить свой API-ключ",
+        "parameters": [
+          {
+            "name": "api-key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Текущий API ключ пользователя"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "new_api_key": {
+                    "type": "string",
+                    "description": "Новый API-ключ"
+                  }
+                },
+                "required": ["new_api_key"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "API-ключ успешно обновлен",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "result": {
+                      "type": "boolean"
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Неверный запрос",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Ошибка аутентификации",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "API-ключ уже используется",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Tweet": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "description": "ID твита"
+          },
+          "content": {
+            "type": "string",
+            "description": "Текст твита"
+          },
+          "attachments": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Ссылки на медиафайлы"
+          },
+          "author": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "integer",
+                "description": "ID автора"
+              },
+              "name": {
+                "type": "string",
+                "description": "Имя автора"
+              }
+            },
+            "description": "Информация об авторе"
+          },
+          "likes": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "user_id": {
+                  "type": "integer",
+                  "description": "ID пользователя"
+                },
+                "name": {
+                  "type": "string",
+                  "description": "Имя пользователя"
+                }
+              }
+            },
+            "description": "Список лайков"
+          }
+        }
+      },
+      "UserProfile": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "description": "ID пользователя"
+          },
+          "name": {
+            "type": "string",
+            "description": "Имя пользователя"
+          },
+          "followers": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "integer",
+                  "description": "ID подписчика"
+                },
+                "name": {
+                  "type": "string",
+                  "description": "Имя подписчика"
+                }
+              }
+            },
+            "description": "Список подписчиков"
+          },
+          "following": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "integer",
+                  "description": "ID подписки"
+                },
+                "name": {
+                  "type": "string",
+                  "description": "Имя подписки"
+                }
+              }
+            },
+            "description": "Список подписок"
+          }
+        }
+      },
+      "Error": {
+        "type": "object",
+        "properties": {
+          "result": {
+            "type": "boolean",
+            "example": false
+          },
+          "error_type": {
+            "type": "string",
+            "description": "Тип ошибки",
+            "example": "Authentication"
+          },
+          "error_message": {
+            "type": "string",
+            "description": "Описание ошибки",
+            "example": "Invalid API key"
+          }
+        }
+      }
+    }
+  }
+}
