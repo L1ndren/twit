@@ -1,20 +1,13 @@
-FROM python:3.9-slim
+FROM python:3.11-slim
 
 WORKDIR /app
 
-RUN apt-get update && apt-get install -y \
-    build-essential \
-    libpq-dev \
-    curl \
-    && rm -rf /var/lib/apt/lists/*
-
-COPY requirements.txt .
+COPY requirements.txt requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .
 
-RUN mkdir -p /app/uploads
+ENV FLASK_APP=wsgi.py
+ENV FLASK_ENV=development
 
-EXPOSE 5000
-
-CMD ["gunicorn", "wsgi:app", "-b", "0.0.0.0:5000", "-w", "4"]
+CMD ["python", "wsgi.py"]
